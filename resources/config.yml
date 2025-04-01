@@ -1,0 +1,13 @@
+checks:
+  speed:
+    enabled: true
+    max_speed_alerts: 100
+    max_speed_ban:  200
+  autoclick:
+    enabled: true
+    max_autoclick_alerts: 20
+    max_autoclick_ban:  25
+  kill_aura:
+    enabled: true
+    max_kill_aura_alerts: 10
+    max_kill_aura_ban:  15
