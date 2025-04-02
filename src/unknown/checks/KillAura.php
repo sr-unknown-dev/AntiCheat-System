@@ -27,6 +27,10 @@ class KillAura {
 
     public function handle(ServerboundPacket $packet, Player $player): void
     {
+        if (!Loader::getInstance()->getConfig()->getNested("checks.killaura.enabled", true)) {
+            return;
+        }
+        
         if ($this->isExempt($player)) {
             return;
         }
@@ -85,11 +89,15 @@ class KillAura {
         $maxTargets = $this->config->getNested("checks.killaura.max_targets", 3);
         $vioThreshold = $this->config->getNested("checks.killaura.violation_threshold", 3);
         
+        Loader::getInstance()->debug("Player $name attacked $targetCount targets in 1 second (max: $maxTargets)", 2);
+        
         if ($targetCount >= $maxTargets) {
             $this->vios[$name]++;
             
+            Loader::getInstance()->debug("KillAura violation for $name: " . $this->vios[$name] . "/" . $vioThreshold, 1);
+            
             if ($this->vios[$name] >= $vioThreshold) {
-                Punishment::ban($player, "KillAura", "30d");
+                Punishment::ban($player, "KillAura");
                 $this->reset($name);
             } else {
                 Loader::getInstance()->getAntiCheatManager()->alert($player, "KillAura", $targetCount);

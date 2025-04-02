@@ -44,9 +44,11 @@ class AntiCheatManager
         $name = $player->getName();
         $time = microtime(true);
         
-        if (isset($this->lastAlert[$name][$check]) && 
-            $time - $this->lastAlert[$name][$check] < $this->getCooldown($check)) {
-            return;
+        if (isset($this->lastAlert[$name][$check])) {
+            $cooldown = $this->config->getNested("alerts.cooldown." . strtolower($check), 1.0);
+            if ($time - $this->lastAlert[$name][$check] < $cooldown) {
+                return;
+            }
         }
         
         $this->lastAlert[$name][$check] = $time;
@@ -70,20 +72,12 @@ class AntiCheatManager
             }
         }
 
-        $this->sendWebhook($check, $player, $value, $vioCount);
+        $this->sendWebhook($check, $player, $value, $this->vioCount[$name]);
     }
-    
-    private function getCooldown(string $check): float
-    {
-        if (!isset($this->alertCooldown[$check])) {
-            $this->alertCooldown[$check] = $this->config->getNested("alerts.cooldown." . strtolower($check), 1.0);
-        }
-        return $this->alertCooldown[$check];
-    }
-    
+
     private function sendWebhook(string $check, Player $player, $value, int $vioCount): void
     {
-        $url = $this->config->getNested("alerts.webhook");
+        $url = $this->config->getNested("discord.webhook");
         if (empty($url)) {
             return;
         }

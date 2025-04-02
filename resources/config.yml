@@ -1,27 +1,64 @@
+# AntiCheat System Configuration
+
+# Discord integration
+discord:
+  link: "https://discord.gg/your-discord-link"
+  webhook: "https://discord.com/api/webhooks/your-webhook-id/your-webhook-token"
+
+# Alert settings
+alerts:
+  cooldown:
+    autoclick: 1.0
+    reach: 1.0
+    speed: 1.0
+    killaura: 1.0
+    fly: 1.0
+    aimbot: 1.0
+
+# Check configurations
 checks:
   autoclick:
+    enabled: true
     max_autoclick_alerts: 20
     max_autoclick_ban: 25
     ping_threshold: 100
     violation_threshold: 3
+  
   reach:
+    enabled: true
     max_reach_alerts: 3.5
     max_reach_ban: 4.5
     violation_threshold: 3
+  
   speed:
+    enabled: true
     max_speed: 10
     max_speed_ban: 15
     ping_threshold: 100
     violation_threshold: 3
+  
   killaura:
+    enabled: true
     max_targets: 3
     max_rotation_speed: 40
     violation_threshold: 3
+  
   fly:
+    enabled: true
     max_air_time: 40
     violation_threshold: 3
+  
   aimbot:
+    enabled: true
     max_variance: 5.0
     violation_threshold: 3
-  discord-link: "https://discord.gg/your-discord-link"
-  discord-webhook: "https://discord.com/api/webhooks/your-webhook-id/your-webhook-token"
+
+# Punishment settings
+punishments:
+  default_ban_duration: "30d"
+  ban_message: "&7Has sido BANEADO\nRazón: &6{reason}\n&7Expira en: {time}\n&7Si deseas apelar el ban: &6{discord}"
+  
+# Debug settings
+debug:
+  enabled: false
+  log_level: 1  # 0=none, 1=basic, 2=detailed

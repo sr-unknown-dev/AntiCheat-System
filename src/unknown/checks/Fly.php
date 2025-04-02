@@ -28,6 +28,10 @@ class Fly {
     }
 
     public function run(ServerboundPacket $packet, Player $player): void {
+        if (!Loader::getInstance()->getConfig()->getNested("checks.fly.enabled", true)) {
+            return;
+        }
+        
         if ($this->isExempt($player) || $player->getAllowFlight()) {
             return;
         }

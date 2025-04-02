@@ -27,6 +27,10 @@ class Aimbot {
 
     public function handle(ServerboundPacket $packet, Player $player): void
     {
+        if (!Loader::getInstance()->getConfig()->getNested("checks.aimbot.enabled", true)) {
+            return;
+        }
+        
         if ($this->isExempt($player)) {
             return;
         }

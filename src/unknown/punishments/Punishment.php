@@ -19,10 +19,16 @@ class Punishment
         self::$config = new Config(Loader::getInstance()->getDataFolder() . "bans.json", Config::JSON);
     }
 
-    public static function ban(Player $player, string $reason, string $duration = "15d"): void
+    public static function ban(Player $player, string $reason, string $duration = null): void
     {
         if (self::$config->exists($player->getName())) {
             return;
+        }
+
+        $config = Loader::getInstance()->getConfig();
+        
+        if ($duration === null) {
+            $duration = $config->getNested("punishments.default_ban_duration", "30d");
         }
 
         $secs = self::parseTime($duration);
@@ -38,12 +44,19 @@ class Punishment
         self::$config->set($player->getName(), $data);
         self::$config->save();
 
-        $player->kick(TextFormat::colorize(
-            "&7Has sido BANEADO\n" .
-            "Razón: &6{$reason}\n" .
-            "&7Expira en: " . self::formatTime($secs) . "\n" .
-            "&7Si deseas apelar el ban: &6" . Loader::getInstance()->getConfig()->get("discord-link")
-        ));
+        $banMessage = $config->getNested("punishments.ban_message", 
+            "&7Has sido BANEADO\nRazón: &6{reason}\n&7Expira en: {time}\n&7Si deseas apelar el ban: &6{discord}");
+        
+        $formattedTime = self::formatTime($secs);
+        $discordLink = $config->getNested("discord.link", "No disponible");
+        
+        $banMessage = str_replace(
+            ["{reason}", "{time}", "{discord}"],
+            [$reason, $formattedTime, $discordLink],
+            $banMessage
+        );
+
+        $player->kick(TextFormat::colorize($banMessage));
     }
 
     public static function unban(string $name): void

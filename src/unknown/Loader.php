@@ -12,6 +12,8 @@ use unknown\checks\Fly;
 use unknown\checks\KillAura;
 use unknown\checks\Reach;
 use unknown\events\PacketListener;
+use unknown\punishments\Punishment;
+use unknown\tasks\BanTask;
 
 class Loader extends PluginBase
 {
@@ -34,6 +36,10 @@ class Loader extends PluginBase
     protected function onEnable(): void
     {
         $this->saveDefaultConfig();
+        
+        // Inicializar el sistema de bans
+        new Punishment();
+        
         $this->antiCheatManager = new AntiCheatManager();
         $this->autoClickCheck = new AutoClick();
         $this->reachCheck = new Reach();
@@ -41,6 +47,7 @@ class Loader extends PluginBase
         $this->killAuraCheck = new KillAura();
         $this->flyCheck = new Fly();
         $this->aimbotCheck = new Aimbot();
+        
         $this->getServer()->getPluginManager()->registerEvents(new PacketListener($this), $this);
         $this->getScheduler()->scheduleRepeatingTask(new BanTask(), 1200);
     }
@@ -78,5 +85,18 @@ class Loader extends PluginBase
     public function getAimbotCheck(): Aimbot
     {
         return $this->aimbotCheck;
+    }
+
+    public function debug(string $message, int $level = 1): void
+    {
+        if (!$this->getConfig()->getNested("debug.enabled", false)) {
+            return;
+        }
+        
+        $configLevel = $this->getConfig()->getNested("debug.log_level", 1);
+        
+        if ($level <= $configLevel) {
+            $this->getLogger()->debug("[AntiCheat] " . $message);
+        }
     }
 }

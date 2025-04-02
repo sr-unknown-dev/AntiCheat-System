@@ -4,14 +4,13 @@ namespace unknown\events;
 
 use pocketmine\event\Listener;
 use pocketmine\event\server\DataPacketReceiveEvent;
-use pocketmine\network\mcpe\protocol\ServerboundPacket;
 use pocketmine\network\mcpe\protocol\InventoryTransactionPacket;
+use pocketmine\network\mcpe\protocol\ServerboundPacket;
 use pocketmine\network\mcpe\protocol\types\inventory\UseItemOnEntityTransactionData;
 use unknown\Loader;
 
 class PacketListener implements Listener
 {
-
     private Loader $loader;
 
     public function __construct(Loader $loader)
@@ -19,7 +18,8 @@ class PacketListener implements Listener
         $this->loader = $loader;
     }
 
-    public function onDataPacketReceive(DataPacketReceiveEvent $event): void {
+    public function onDataPacketReceive(DataPacketReceiveEvent $event): void
+    {
         $packet = $event->getPacket();
         $player = $event->getOrigin()->getPlayer();
         
