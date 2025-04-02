@@ -31,10 +31,6 @@ class Aimbot {
             return;
         }
         
-        if ($this->isExempt($player)) {
-            return;
-        }
-        
         $name = $player->getName();
         $time = microtime(true);
         
@@ -185,26 +181,6 @@ class Aimbot {
         }
         
         return $var / $count;
-    }
-    
-    public function exempt(Player $player, int $secs = 30): void
-    {
-        $this->exempt[$player->getName()] = time() + $secs;
-    }
-    
-    private function isExempt(Player $player): bool
-    {
-        $name = $player->getName();
-        if (!isset($this->exempt[$name])) {
-            return false;
-        }
-        
-        if ($this->exempt[$name] < time()) {
-            unset($this->exempt[$name]);
-            return false;
-        }
-        
-        return true;
     }
     
     private function reset(string $name): void
