@@ -1,13 +1,27 @@
 checks:
-  speed:
-    enabled: true
-    max_speed_alerts: 100
-    max_speed_ban:  200
   autoclick:
-    enabled: true
     max_autoclick_alerts: 20
-    max_autoclick_ban:  25
-  kill_aura:
-    enabled: true
-    max_kill_aura_alerts: 10
-    max_kill_aura_ban:  15
+    max_autoclick_ban: 25
+    ping_threshold: 100
+    violation_threshold: 3
+  reach:
+    max_reach_alerts: 3.5
+    max_reach_ban: 4.5
+    violation_threshold: 3
+  speed:
+    max_speed: 10
+    max_speed_ban: 15
+    ping_threshold: 100
+    violation_threshold: 3
+  killaura:
+    max_targets: 3
+    max_rotation_speed: 40
+    violation_threshold: 3
+  fly:
+    max_air_time: 40
+    violation_threshold: 3
+  aimbot:
+    max_variance: 5.0
+    violation_threshold: 3
+  discord-link: "https://discord.gg/your-discord-link"
+  discord-webhook: "https://discord.com/api/webhooks/your-webhook-id/your-webhook-token"

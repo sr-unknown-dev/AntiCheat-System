@@ -6,69 +6,109 @@ use CortexPE\DiscordWebhookAPI\Embed;
 use CortexPE\DiscordWebhookAPI\Message;
 use CortexPE\DiscordWebhookAPI\Webhook;
 use pocketmine\player\Player;
-use pocketmine\player\PlayerInfo;
 use pocketmine\Server;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat as TF;
 use unknown\Loader;
+use unknown\punishments\Punishment;
 
 class AntiCheatManager
 {
     private Config $config;
-    private Config $exemptConfig;
-    private array $exemptPlayers = [];
+    private Config $exemptCfg;
+    private array $exempt = [];
     private array $alerts = [];
+    private array $vioCount = [];
+    private array $lastAlert = [];
+    private array $alertCooldown = [];
 
     public function __construct()
     {
         $loader = Loader::getInstance();
         $this->config = $loader->getConfig();
-        $this->exemptConfig = new Config($loader->getDataFolder() . "exempt.yml", Config::YAML);
-        $this->loadExemptPlayers();
+        $this->exemptCfg = new Config($loader->getDataFolder() . "exempt.yml", Config::YAML);
+        $this->loadExempt();
     }
 
-    private function loadExemptPlayers(): void
+    private function loadExempt(): void
     {
-        $this->exemptPlayers = $this->exemptConfig->get("players", []);
+        $this->exempt = $this->exemptCfg->get("players", []);
     }
 
-    public function alertStaff(Player $player, string $checkName, int $violations): void
+    public function alert(Player $player, string $check, $value): void
     {
         if (!$player->isOnline()) {
             return;
         }
+        
+        $name = $player->getName();
+        $time = microtime(true);
+        
+        if (isset($this->lastAlert[$name][$check]) && 
+            $time - $this->lastAlert[$name][$check] < $this->getCooldown($check)) {
+            return;
+        }
+        
+        $this->lastAlert[$name][$check] = $time;
+        
+        if (!isset($this->vioCount[$name])) {
+            $this->vioCount[$name] = 1;
+        } else {
+            $this->vioCount[$name]++;
+        }
 
-        $message = TF::colorize("§8[§cAntiCheat§8] §f" . $player->getName() . " §7ha fallado §f" .
-            $checkName . " §7(x" . $violations . ")");
+        $vioCount = $this->vioCount[$name];
+        
+        $valueStr = is_float($value) ? number_format($value, 2) : $value;
+        
+        $msg = TF::colorize("§8[§cAntiCheat§8]: §7Player: " . $name . " §7type: §f" .
+            $check ." §7value: §f" . $valueStr . " §7vios: §7(x" . $vioCount . ")");
 
-        $onlinePlayers = Server::getInstance()->getOnlinePlayers();
-        foreach ($onlinePlayers as $staff) {
-            if ($staff->hasPermission("anticheat.alerts") && $this->hasAlerts($staff)) {
-                $staff->sendMessage($message);
+        foreach (Server::getInstance()->getOnlinePlayers() as $staff) {
+            if ($this->hasAlerts($staff)) {
+                $staff->sendMessage($msg);
             }
         }
 
-        $webhookUrl = $this->config->getNested("alerts.webhook");
-        if (!empty($webhookUrl)) {
-            try {
-                $webhook = new Webhook($webhookUrl);
-                $msg = new Message();
-                $embed = new Embed();
+        $this->sendWebhook($check, $player, $value, $vioCount);
+    }
+    
+    private function getCooldown(string $check): float
+    {
+        if (!isset($this->alertCooldown[$check])) {
+            $this->alertCooldown[$check] = $this->config->getNested("alerts.cooldown." . strtolower($check), 1.0);
+        }
+        return $this->alertCooldown[$check];
+    }
+    
+    private function sendWebhook(string $check, Player $player, $value, int $vioCount): void
+    {
+        $url = $this->config->getNested("alerts.webhook");
+        if (empty($url)) {
+            return;
+        }
+        
+        try {
+            $hook = new Webhook($url);
+            $msg = new Message();
+            $embed = new Embed();
 
-                $embed->setTitle($checkName . " Alert");
-                $embed->setColor(0xf9ff1a);
-                $embed->setDescription(
-                    "Player: " . $player->getName() .
-                    "\nPing: " . $player->getNetworkSession()->getPing() .
-                    "\nViolations: " . $violations
-                );
-                $embed->setFooter("Server Network");
+            $embed->setTitle($check . " Alert");
+            $embed->setColor(0xf9ff1a);
+            
+            $valueStr = is_float($value) ? number_format($value, 2) : $value;
+            
+            $embed->setDescription(
+                "Player: " . $player->getName() .
+                "\nPing: " . $player->getNetworkSession()->getPing() . "ms" .
+                "\nValue: " . $valueStr . 
+                "\nViolations: " . $vioCount
+            );
+            $embed->setFooter("Server Network");
 
-                $msg->addEmbed($embed);
-                $webhook->send($msg);
-            } catch (\Exception $e) {
-                Server::getInstance()->getLogger()->error("Failed to send webhook: " . $e->getMessage());
-            }
+            $msg->addEmbed($embed);
+            $hook->send($msg);
+        } catch (\Exception $e) {
         }
     }
 
@@ -90,43 +130,44 @@ class AntiCheatManager
         return isset($this->alerts[$player->getName()]) && $player->hasPermission("anticheat.alerts");
     }
 
-    public function toggleExemption(Player $player): void
+    public function toggleExempt(Player $player): void
     {
         $name = $player->getName();
 
-        if ($this->hasExemption($player)) {
-            unset($this->exemptPlayers[$name]);
-            $player->sendMessage(TF::colorize("§8[§gAntiCheat§8] §fLa exención ha sido removida."));
+        if ($this->isExempt($player)) {
+            unset($this->exempt[$name]);
+            $player->sendMessage(TF::colorize("§8[§gAntiCheat§8] §fLa exepción ha sido removida."));
         } else {
-            $this->exemptPlayers[$name] = true;
-            $player->sendMessage(TF::colorize("§8[§gAntiCheat§8] §fLa exención ha sido añadida."));
+            $this->exempt[$name] = true;
+            $player->sendMessage(TF::colorize("§8[§gAntiCheat§8] §fLa exepcion ha sido añadida."));
         }
 
-        $this->exemptConfig->set("players", array_keys($this->exemptPlayers));
-        $this->exemptConfig->save();
+        $this->exemptCfg->set("players", array_keys($this->exempt));
+        $this->exemptCfg->save();
     }
 
-    public function hasExemption(Player $player): bool
+    public function isExempt(Player $player): bool
     {
-        return isset($this->exemptPlayers[$player->getName()]);
+        return isset($this->exempt[$player->getName()]);
+    }
+    
+    public function resetVios(string $name): void
+    {
+        unset($this->vioCount[$name]);
+        unset($this->lastAlert[$name]);
     }
 
-    public function punishments(Player $player, string $checkName): void
+    public function punish(Player $player, string $check): void
     {
         if (!$player->isOnline()) {
             return;
         }
 
-        $staffMode = Loader::getInstance()->getStaffModeManager();
-        if ($staffMode === null) {
-            return;
-        }
+        $checkLower = strtolower($check);
+        $banReasons = ["speed", "autoclick", "reach", "fly", "killaura"];
 
-        $checkNameLower = strtolower($checkName);
-        $banReasons = ["speed", "autoclick", "reach"];
-
-        if (in_array($checkNameLower, $banReasons, true)) {
-            $staffMode->addBanAntiCheat($player, ucfirst($checkNameLower), "30d");
+        if (in_array($checkLower, $banReasons, true)) {
+            Punishment::ban($player, ucfirst($checkLower), "30d");
         }
     }
 }
