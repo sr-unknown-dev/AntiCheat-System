@@ -110,7 +110,7 @@ punishments:
 - anticheat.admin - Gives access to all AntiCheat commands
 ## Credits
 - Developer : Sr_Unkn0wn
-- Contributor : Trae AI - Assisted with code optimization and additional checks
+- Contributor : Trae AI - Assisted with code optimization and additional checks(Aimbot, KillAura, Speed)
 - Special Thanks : PocketMine-MP Team for their amazing server software
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.

@@ -49,7 +49,7 @@ class Loader extends PluginBase
         $this->flyCheck = new Fly();
         $this->aimbotCheck = new Aimbot();
         
-        $this->getServer()->getCommandMap()->register("anticheat", new AntiCheatCommand());
+        $this->getServer()->getCommandMap()->register("anticheat", new AntiCheatCommand($this));
         $this->getServer()->getPluginManager()->registerEvents(new PacketListener($this), $this);
         $this->getServer()->getPluginManager()->registerEvents(new Events($this), $this);
         $this->getScheduler()->scheduleRepeatingTask(new BanTask(), 1200);

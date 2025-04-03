@@ -5,14 +5,15 @@ namespace unknown\commands;
 use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
 use CortexPE\Commando\BaseCommand;
+use unknown\Loader;
 use unknown\commands\subcommands\AlertsSubCommand;
 use unknown\commands\subcommands\ExempSubCommand;
 use unknown\commands\subcommands\UnBanSubCommand;
 
 class AntiCheatCommand extends BaseCommand {
 
-    public function __construct() {
-        parent::__construct("ac", "AntiCheat system commands");
+    public function __construct(Loader $load) {
+        parent::__construct($load, "ac", "AntiCheat system commands");
     }
 
     protected function prepare(): void {
@@ -26,7 +27,7 @@ class AntiCheatCommand extends BaseCommand {
     {
         if(!$sender instanceof Player) {
             $sender->sendMessage("§cThis command can only be used in-game!");
-            return false;
+            return;
         }
 
         $sender->sendMessage("§e=== AntiCheat Commands ===");
