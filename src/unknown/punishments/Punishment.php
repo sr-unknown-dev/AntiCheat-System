@@ -21,7 +21,7 @@ class Punishment
 
     public static function ban(Player $player, string $reason, string $duration = null): void
     {
-        if (self::$config->exists($player->getName())) {
+        if (self::isBanned($player->getName()) || self::$config->exists($player->getName())) {
             return;
         }
 
@@ -64,6 +64,8 @@ class Punishment
         if (self::$config->exists($name)) {
             self::$config->remove($name);
             self::$config->save();
+        }else{
+            return;
         }
     }
 

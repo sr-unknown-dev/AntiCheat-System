@@ -2,9 +2,8 @@
 
 namespace unknown;
 
-use hcf\module\anticheat\AntiCheatManager;
-use hcf\module\anticheat\checks\AutoClick;
-use hcf\module\anticheat\checks\Speed;
+use unknown\checks\AutoClick;
+use unknown\checks\Speed;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\SingletonTrait;
 use unknown\checks\Aimbot;
@@ -12,6 +11,7 @@ use unknown\checks\Fly;
 use unknown\checks\KillAura;
 use unknown\checks\Reach;
 use unknown\events\PacketListener;
+use unknown\managers\AntiCheatManager;
 use unknown\punishments\Punishment;
 use unknown\tasks\BanTask;
 

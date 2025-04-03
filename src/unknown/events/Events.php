@@ -17,16 +17,17 @@ class Events implements Listener
         if (!$player instanceof Player) return;
 
         $name = $player->getName();
-        $bans = Punishment::$config->getAll();
-        $currentTime = time();
-
-        if (isset($bans[$name]) && ($bans[$name]['expires'] > $currentTime || $bans[$name]['expires'] == 0)) {
-            $banData = $bans[$name];
+        
+        if (Punishment::isBanned($name)) {
+            $reason = Punishment::getReason($name);
+            $timeLeft = Punishment::getTimeLeft($name);
+            $discordLink = Loader::getInstance()->getConfig()->getNested("discord.link", "");
+            
             $player->kick(TextFormat::colorize(
                 "&7Estás baneado\n" .
-                "Razón: &6{$banData['reason']}\n" .
-                "&7Expira en: " . Punishment::formatTime($banData['expires'] - $currentTime) . "\n" .
-                "&7Si deseas apelar el ban: &6" . Loader::getInstance()->getConfig()->get("discord-link")
+                "Razón: &6{$reason}\n" .
+                "&7Expira en: {$timeLeft}\n" .
+                "&7Si deseas apelar el ban: &6{$discordLink}"
             ));
         }
     }

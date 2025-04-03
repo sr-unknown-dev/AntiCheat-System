@@ -1,6 +1,6 @@
 <?php
 
-namespace hcf\module\anticheat\checks;
+namespace unknown\checks;
 
 use pocketmine\player\Player;
 use pocketmine\utils\Config;
@@ -20,7 +20,6 @@ class Speed
     private array $lastPositions = [];
     private array $lastMoveTime = [];
     private array $violations = [];
-    private array $exemptPlayers = [];
     private Config $config;
 
     public function __construct()

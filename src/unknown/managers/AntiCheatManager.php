@@ -1,6 +1,6 @@
 <?php
 
-namespace hcf\module\anticheat;
+namespace unknown\managers;
 
 use CortexPE\DiscordWebhookAPI\Embed;
 use CortexPE\DiscordWebhookAPI\Message;

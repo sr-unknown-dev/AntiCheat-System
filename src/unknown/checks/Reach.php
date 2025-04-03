@@ -17,7 +17,6 @@ class Reach
 
     private array $vios = [];
     private array $lastAttacks = [];
-    private array $exempt = [];
     private Config $config;
 
     public function __construct()

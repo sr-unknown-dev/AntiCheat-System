@@ -1,6 +1,6 @@
 <?php
 
-namespace hcf\module\anticheat\checks;
+namespace unknown\checks;
 
 use pocketmine\player\Player;
 use pocketmine\utils\Config;
@@ -18,7 +18,6 @@ class AutoClick
     private array $patterns = [];
     private array $vios = [];
     private Config $config;
-    private array $exempt = [];
 
     public function __construct()
     {

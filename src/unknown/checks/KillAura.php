@@ -17,7 +17,6 @@ class KillAura {
     private array $targets = [];
     private array $rotations = [];
     private array $vios = [];
-    private array $exempt = [];
     private Config $config;
 
     public function __construct()

@@ -17,7 +17,6 @@ class Aimbot {
     private array $attacks = [];
     private array $patterns = [];
     private array $vios = [];
-    private array $exempt = [];
     private Config $config;
 
     public function __construct()

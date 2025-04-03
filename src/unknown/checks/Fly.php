@@ -19,7 +19,6 @@ class Fly {
     private array $lastY = [];
     private array $airTime = [];
     private array $vios = [];
-    private array $exempt = [];
     private Config $config;
 
     public function __construct()
