@@ -10,6 +10,7 @@ use unknown\checks\Aimbot;
 use unknown\checks\Fly;
 use unknown\checks\KillAura;
 use unknown\checks\Reach;
+use unknown\events\Events;
 use unknown\events\PacketListener;
 use unknown\managers\AntiCheatManager;
 use unknown\punishments\Punishment;
@@ -37,7 +38,6 @@ class Loader extends PluginBase
     {
         $this->saveDefaultConfig();
         
-        // Inicializar el sistema de bans
         new Punishment();
         
         $this->antiCheatManager = new AntiCheatManager();
@@ -49,6 +49,7 @@ class Loader extends PluginBase
         $this->aimbotCheck = new Aimbot();
         
         $this->getServer()->getPluginManager()->registerEvents(new PacketListener($this), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new Events($this), $this);
         $this->getScheduler()->scheduleRepeatingTask(new BanTask(), 1200);
     }
 

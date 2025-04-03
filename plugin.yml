@@ -3,3 +3,21 @@ main: unknown\Loader
 version: 1.0.0
 author: Sr_Unkn0wn
 api: 5.0.0
+
+permissions:
+  anticheat.cmds:
+    description: Allows players to use the /anticheat command
+    default: op
+  anticheat.alerts:
+    description: Allows players to receive anti-cheat alerts
+    default: op
+  anticheat.exempt:
+    description: Allows players to exempt others from checks
+    default: op
+  anticheat.unban:
+    description: Allows players to unban others
+    default: op
+  anticheat.admin:
+    description: Gives access to all AntiCheat commands
+    default: op
+

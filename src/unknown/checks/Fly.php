@@ -49,23 +49,18 @@ class Fly {
                 $this->vios[$name] = 0;
             }
             
-            // Store position history
             $this->positions[$name][] = [
                 'x' => $pos->x,
                 'y' => $pos->y,
                 'z' => $pos->z,
                 'time' => $time
             ];
-            
-            // Limit history size
             if (count($this->positions[$name]) > 20) {
                 array_shift($this->positions[$name]);
             }
             
-            // Check if player is on ground
             $onGround = $this->isOnGround($player);
             
-            // Check for fly
             $this->checkFly($player, $onGround);
             
             $this->lastY[$name] = $pos->y;
@@ -77,23 +72,23 @@ class Fly {
         $name = $player->getName();
         $pos = $player->getPosition();
         
-        // Reset air time if on ground
         if ($onGround) {
             $this->airTime[$name] = 0;
             return;
         }
         
-        // Increment air time
         $this->airTime[$name]++;
         
-        // Get config values
         $maxAirTime = $this->config->getNested("checks.fly.max_air_time", 40);
         $vioThreshold = $this->config->getNested("checks.fly.violation_threshold", 3);
+        $ignoreSprintJump = $this->config->getNested("checks.fly.ignore_sprint_jump", true);
         
-        // Check for vertical movement
         $yDiff = $pos->y - $this->lastY[$name];
         
-        // If player is not falling and has been in air too long
+        if ($ignoreSprintJump && $player->isSprinting() && $this->airTime[$name] < 20 && $yDiff < 0) {
+            return;
+        }
+        
         if ($this->airTime[$name] > $maxAirTime && $yDiff >= 0) {
             $this->vios[$name]++;
             
@@ -105,8 +100,7 @@ class Fly {
             }
         }
         
-        // Check for hovering (minimal vertical movement)
-        if ($this->airTime[$name] > 10 && abs($yDiff) < 0.05) {
+        if ($this->airTime[$name] > 20 && abs($yDiff) < 0.05) {
             $this->vios[$name] += 0.5;
             
             if ($this->vios[$name] >= $vioThreshold) {
@@ -123,16 +117,13 @@ class Fly {
         $pos = $player->getPosition();
         $world = $player->getWorld();
         
-        // Check block below player
         $blockPos = $pos->subtract(0, 0.3, 0)->floor();
         $block = $world->getBlock($blockPos);
         
-        // Check if block is solid
         if ($block->isSolid()) {
             return true;
         }
         
-        // Check surrounding blocks (for edge cases)
         $offsets = [
             [0.3, 0, 0],
             [-0.3, 0, 0],

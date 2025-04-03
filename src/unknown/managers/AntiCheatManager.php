@@ -121,7 +121,7 @@ class AntiCheatManager
 
     public function hasAlerts(Player $player): bool
     {
-        return isset($this->alerts[$player->getName()]) && $player->hasPermission("anticheat.alerts");
+        return isset($this->alerts[$player->getName()]) && $player->hasPermission("anticheat.alerts") || Server::getInstance()->isOp($player->getName());
     }
 
     public function toggleExempt(Player $player): void

@@ -19,8 +19,8 @@ alerts:
 checks:
   autoclick:
     enabled: true
-    max_autoclick_alerts: 20
-    max_autoclick_ban: 25
+    max_autoclick_alerts: 2
+    max_autoclick_ban: 3
     ping_threshold: 100
     violation_threshold: 3
   
@@ -45,8 +45,9 @@ checks:
   
   fly:
     enabled: true
-    max_air_time: 40
-    violation_threshold: 3
+    max_air_time: 60
+    violation_threshold: 5
+    ignore_sprint_jump: true
   
   aimbot:
     enabled: true
@@ -56,9 +57,9 @@ checks:
 # Punishment settings
 punishments:
   default_ban_duration: "30d"
-  ban_message: "&7Has sido BANEADO\nRazón: &6{reason}\n&7Expira en: {time}\n&7Si deseas apelar el ban: &6{discord}"
+  ban_message: "&7Has sido BANEADO\nRazón: &6{reason}\n&7Expira en: &6{time}\n&7Si deseas apelar el ban: &6{discord}"
   
-# Debug settings
+# Debug setting
 debug:
   enabled: false
-  log_level: 1  # 0=none, 1=basic, 2=detailed
+  log_level: 1
