@@ -158,7 +158,7 @@ class AntiCheatManager
         }
 
         $checkLower = strtolower($check);
-        $banReasons = ["speed", "autoclick", "reach", "fly", "killaura"];
+        $banReasons = ["speed", "autoclick", "reach", "fly", "killaura", "aimbot"];
 
         if (in_array($checkLower, $banReasons, true)) {
             Punishment::ban($player, ucfirst($checkLower), "30d");
