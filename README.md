@@ -2,6 +2,7 @@
 ## Overview
 A comprehensive anti-cheat solution for PocketMine-MP servers, designed to detect and prevent various types of cheating in real-time with minimal false positives.
 
+## Prototype
 ## Features
 ### Multiple Cheat Detection
 - AutoClick : Detects abnormal clicking patterns and speeds
