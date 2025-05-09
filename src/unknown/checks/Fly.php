@@ -30,25 +30,25 @@ class Fly {
         if (!Loader::getInstance()->getConfig()->getNested("checks.fly.enabled", true)) {
             return;
         }
-        
+
         if ($player->getAllowFlight()) {
             return;
         }
-        
+
         $isMove = ($packet instanceof MovePlayerPacket || $packet instanceof PlayerAuthInputPacket);
-        
+
         if ($isMove) {
             $name = $player->getName();
             $pos = $player->getPosition();
             $time = microtime(true);
-            
+
             if (!isset($this->positions[$name])) {
                 $this->positions[$name] = [];
                 $this->lastY[$name] = $pos->y;
                 $this->airTime[$name] = 0;
                 $this->vios[$name] = 0;
             }
-            
+
             $this->positions[$name][] = [
                 'x' => $pos->x,
                 'y' => $pos->y,
@@ -58,40 +58,40 @@ class Fly {
             if (count($this->positions[$name]) > 20) {
                 array_shift($this->positions[$name]);
             }
-            
+
             $onGround = $this->isOnGround($player);
-            
+
             $this->checkFly($player, $onGround);
-            
+
             $this->lastY[$name] = $pos->y;
         }
     }
-    
+
     private function checkFly(Player $player, bool $onGround): void
     {
         $name = $player->getName();
         $pos = $player->getPosition();
-        
+
         if ($onGround) {
             $this->airTime[$name] = 0;
             return;
         }
-        
+
         $this->airTime[$name]++;
-        
+
         $maxAirTime = $this->config->getNested("checks.fly.max_air_time", 40);
         $vioThreshold = $this->config->getNested("checks.fly.violation_threshold", 3);
         $ignoreSprintJump = $this->config->getNested("checks.fly.ignore_sprint_jump", true);
-        
+
         $yDiff = $pos->y - $this->lastY[$name];
-        
+
         if ($ignoreSprintJump && $player->isSprinting() && $this->airTime[$name] < 20 && $yDiff < 0) {
             return;
         }
-        
+
         if ($this->airTime[$name] > $maxAirTime && $yDiff >= 0) {
             $this->vios[$name]++;
-            
+
             if ($this->vios[$name] >= $vioThreshold) {
                 Punishment::ban($player, "Fly", "30d");
                 $this->reset($name);
@@ -99,10 +99,10 @@ class Fly {
                 Loader::getInstance()->getAntiCheatManager()->alert($player, "Fly", $this->airTime[$name]);
             }
         }
-        
+
         if ($this->airTime[$name] > 20 && abs($yDiff) < 0.05) {
             $this->vios[$name] += 0.5;
-            
+
             if ($this->vios[$name] >= $vioThreshold) {
                 Punishment::ban($player, "Fly", "30d");
                 $this->reset($name);
@@ -111,19 +111,19 @@ class Fly {
             }
         }
     }
-    
+
     private function isOnGround(Player $player): bool
     {
         $pos = $player->getPosition();
         $world = $player->getWorld();
-        
+
         $blockPos = $pos->subtract(0, 0.3, 0)->floor();
         $block = $world->getBlock($blockPos);
-        
+
         if ($block->isSolid()) {
             return true;
         }
-        
+
         $offsets = [
             [0.3, 0, 0],
             [-0.3, 0, 0],
@@ -134,19 +134,19 @@ class Fly {
             [0.3, 0, -0.3],
             [-0.3, 0, 0.3]
         ];
-        
+
         foreach ($offsets as $offset) {
             $checkPos = $pos->subtract($offset[0], 0.3, $offset[2])->floor();
             $checkBlock = $world->getBlock($checkPos);
-            
+
             if ($checkBlock->isSolid()) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     private function reset(string $name): void
     {
         unset($this->positions[$name]);

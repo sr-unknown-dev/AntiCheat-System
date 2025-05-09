@@ -14,9 +14,8 @@ use unknown\punishments\Punishment;
 
 class Reach
 {
-
-    private array $vios = [];
-    private array $lastAttacks = [];
+    private array $violationCounts = [];
+    private array $lastAttackTimes = [];
     private Config $config;
 
     public function __construct()
@@ -26,93 +25,80 @@ class Reach
 
     public function handle(ServerboundPacket $packet, Player $player): void
     {
-
         if ($packet instanceof InventoryTransactionPacket &&
             $packet->trData instanceof UseItemOnEntityTransactionData) {
-
             $targetId = $packet->trData->getActorRuntimeId();
-            $target = $this->getEntity($player->getWorld(), $targetId);
+            $target = $this->getEntityByRuntimeId($player->getWorld(), $targetId);
 
             if ($target !== null) {
                 $distance = $player->getPosition()->distance($target->getPosition());
-                $this->check($player, $distance);
+                $this->evaluateReach($player, $distance);
             }
         }
     }
 
     public function run(Player $player, float $reachDistance): void
     {
-        $this->check($player, $reachDistance);
+        $this->evaluateReach($player, $reachDistance);
     }
 
-    private function check(Player $player, float $reachDistance): void
+    private function evaluateReach(Player $player, float $reachDistance): void
     {
-        $name = $player->getName();
-        $ping = $player->getNetworkSession()->getPing();
+        $playerName = $player->getName();
+        $pingCompensation = $this->calculatePingCompensation($player->getNetworkSession()->getPing());
         $currentTime = microtime(true);
 
-        if (!isset($this->vios[$name])) {
-            $this->vios[$name] = 0;
-        }
+        $maxAlertDistance = $this->config->getNested("checks.reach.max_reach_alerts", 3.5) + $pingCompensation;
+        $maxBanDistance = $this->config->getNested("checks.reach.max_reach_ban", 4.5) + $pingCompensation;
+        $violationThreshold = $this->config->getNested("checks.reach.violation_threshold", 3);
 
-        if (!isset($this->lastAttacks[$name])) {
-            $this->lastAttacks[$name] = 0;
-        }
+        $this->violationCounts[$playerName] = $this->violationCounts[$playerName] ?? 0;
+        $timeSinceLastAttack = $this->getTimeSinceLastAttack($playerName, $currentTime);
 
-        $timeSince = $currentTime - $this->lastAttacks[$name];
-        $this->lastAttacks[$name] = $currentTime;
-
-        $maxAlerts = $this->config->getNested("checks.reach.max_reach_alerts", 3.5);
-        $maxBan = $this->config->getNested("checks.reach.max_reach_ban", 4.5);
-        $pingComp = $this->calculationPing($ping);
-        $vioThreshold = $this->config->getNested("checks.reach.violation_threshold", 3);
-
-        $adjReach = $maxAlerts + $pingComp;
-        $adjReachBan = $maxBan + $pingComp;
-
-        if ($reachDistance >= $adjReachBan) {
-            $this->vios[$name]++;
-
-            if ($this->vios[$name] >= $vioThreshold) {
+        if ($reachDistance >= $maxBanDistance) {
+            $this->violationCounts[$playerName]++;
+            if ($this->violationCounts[$playerName] >= $violationThreshold) {
                 Punishment::ban($player, "Reach", "30d");
-                $this->reset($name);
+                $this->resetViolations($playerName);
             } else {
                 Loader::getInstance()->getAntiCheatManager()->alert($player, "Reach", $reachDistance);
             }
-        } elseif ($reachDistance > $adjReach) {
+        } elseif ($reachDistance > $maxAlertDistance) {
             Loader::getInstance()->getAntiCheatManager()->alert($player, "Reach", $reachDistance);
-
-            if ($timeSince < 0.5) {
-                $this->vios[$name] += 0.5;
+            if ($timeSinceLastAttack < 0.5) {
+                $this->violationCounts[$playerName] += 0.5;
             }
         } else {
-            $this->vios[$name] = max(0, $this->vios[$name] - 0.25);
+            $this->violationCounts[$playerName] = max(0, $this->violationCounts[$playerName] - 0.25);
         }
     }
 
-    private function calculationPing(int $ping): float
+    private function calculatePingCompensation(int $ping): float
     {
-        if ($ping < 50) return 0;
-        if ($ping < 100) return 0.2;
-        if ($ping < 150) return 0.4;
-        if ($ping < 200) return 0.6;
-        if ($ping < 300) return 0.8;
-        return 1.0;
+        return match (true) {
+            $ping < 50 => 0.0,
+            $ping < 100 => 0.2,
+            $ping < 150 => 0.4,
+            $ping < 200 => 0.6,
+            $ping < 300 => 0.8,
+            default => 1.0,
+        };
     }
 
-    private function getEntity(World $world, int $runtimeId): ?Entity
+    private function getEntityByRuntimeId(World $world, int $runtimeId): ?Entity
     {
-        foreach ($world->getEntities() as $entity) {
-            if ($entity->getId() === $runtimeId) {
-                return $entity;
-            }
-        }
-        return null;
+        return $world->getEntity($runtimeId);
     }
 
-    private function reset(string $name): void
+    private function getTimeSinceLastAttack(string $playerName, float $currentTime): float
     {
-        unset($this->vios[$name]);
-        unset($this->lastAttacks[$name]);
+        $timeSinceLastAttack = $currentTime - ($this->lastAttackTimes[$playerName] ?? 0);
+        $this->lastAttackTimes[$playerName] = $currentTime;
+        return $timeSinceLastAttack;
+    }
+
+    private function resetViolations(string $playerName): void
+    {
+        unset($this->violationCounts[$playerName], $this->lastAttackTimes[$playerName]);
     }
 }

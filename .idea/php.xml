@@ -12,6 +12,7 @@
   </component>
   <component name="PhpIncludePathManager">
     <include_path>
+      <path value="$USER_HOME$/OneDrive/Documentos/src" />
       <path value="$USER_HOME$/Documents/src" />
     </include_path>
   </component>
