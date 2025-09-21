@@ -89,7 +89,7 @@ class AutoClick
     private function isClick(ServerboundPacket $packet): bool
     {
         return ($packet instanceof PlayerActionPacket &&
-                ($packet->action === PlayerActionPacket::ACTION_START_BREAK || 
+                ($packet->action === PlayerActionPacket::ACTION_START_BREAK ||
                  $packet->action === PlayerActionPacket::ACTION_ABORT_BREAK)) ||
             ($packet instanceof InventoryTransactionPacket &&
                 $packet->trData instanceof UseItemOnEntityTransactionData) ||
@@ -102,7 +102,6 @@ class AutoClick
 
     private function clean(string $name, float $time): void
     {
-        // Mantener solo los clics dentro de una ventana de tiempo
         $timeWindow = $this->config->getNested("checks.autoclick.time_window", 1.0);
         $this->clicks[$name] = array_filter($this->clicks[$name], function ($stamp) use ($time, $timeWindow) {
             return ($time - $stamp) <= $timeWindow;
@@ -119,14 +118,12 @@ class AutoClick
         $stamps = $this->clicks[$name];
         sort($stamps);
 
-        // Analizar gaps entre clics
         for ($i = 1; $i < count($stamps); $i++) {
-            $gaps[] = round(($stamps[$i] - $stamps[$i - 1]) * 1000, 2); // en milisegundos
+            $gaps[] = round(($stamps[$i] - $stamps[$i - 1]) * 1000, 2);
         }
 
         $this->patterns[$name] = $gaps;
-        
-        // Detección de secuencias repetitivas
+
         if (count($gaps) >= 5) {
             $this->analyzeSequences($name, $gaps);
         }
@@ -134,10 +131,8 @@ class AutoClick
     
     private function analyzeSequences(string $name, array $gaps): void
     {
-        // Buscar patrones repetitivos en las secuencias de tiempo
         $sequence = "";
         foreach ($gaps as $gap) {
-            // Redondeamos y categorizamos tiempos para detectar patrones
             if ($gap < 20) {
                 $sequence .= "A"; // muy rápido
             } elseif ($gap < 50) {
@@ -150,8 +145,7 @@ class AutoClick
         }
         
         $this->sequences[$name] = $sequence;
-        
-        // Buscar patrones repetitivos
+
         for ($len = 2; $len <= 5; $len++) {
             $patterns = [];
             for ($i = 0; $i <= strlen($sequence) - $len; $i++) {
@@ -161,8 +155,7 @@ class AutoClick
                 }
                 $patterns[$pat]++;
             }
-            
-            // Si un patrón se repite muchas veces, es sospechoso
+
             foreach ($patterns as $pat => $count) {
                 if ($count >= 3 && strlen($pat) >= 3) {
                     $this->suspicious[$name] += 2;
@@ -184,17 +177,15 @@ class AutoClick
         }
 
         $gaps = $this->patterns[$name];
-        
-        // Varias métricas para detectar patrones de bot
+
         $var = $this->calcVar($gaps);
         $stdDev = sqrt($var);
         $mean = array_sum($gaps) / count($gaps);
-        $cv = ($mean > 0) ? $stdDev / $mean : 0; // Coeficiente de variación
-        
-        // Calcular consecutivos similares (detección de consistencia sospechosa)
+        $cv = ($mean > 0) ? $stdDev / $mean : 0;
+
         $similarConsecutive = 0;
         for ($i = 1; $i < count($gaps); $i++) {
-            if (abs($gaps[$i] - $gaps[$i-1]) < 5) { // menos de 5ms de diferencia
+            if (abs($gaps[$i] - $gaps[$i-1]) < 5) {
                 $similarConsecutive++;
             }
         }
@@ -203,9 +194,7 @@ class AutoClick
         $cvThreshold = $this->config->getNested("checks.autoclick.cv_threshold", 0.3);
         
         Loader::getInstance()->debug("Player $name: CPS=$cps, Variance=$var, CV=$cv, Similar=$similarConsecutive", 2);
-        
-        // Un auto-clicker mostrará patrones muy regulares (baja varianza)
-        // o patrones muy precisos (muchos consecutivos similares)
+
         return ($var < $varThreshold || $cv < $cvThreshold || $similarConsecutive >= 3);
     }
 

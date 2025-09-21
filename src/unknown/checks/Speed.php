@@ -88,7 +88,7 @@ class Speed
                     Loader::getInstance()->getAntiCheatManager()->alert($player, "Speed", $speed);
                     $this->violations[$name] += 0.5;
                 } else {
-                    $this->violations[$name] = max(0, $this->violations[$name] - 0.25); // Decrease violations over time
+                    $this->violations[$name] = max(0, $this->violations[$name] - 0.25);
                 }
             }
         }
